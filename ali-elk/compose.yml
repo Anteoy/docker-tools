@@ -1,0 +1,49 @@
+elasticsearch1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.4.0
+    hostname: elasticsearch1
+    environment:
+      - cluster.name=es-cluster
+      - node.name=esnode1
+      - http.host=0.0.0.0
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - http.cors.enabled=true
+      - http.cors.allow-origin=*
+      - http.cors.allow-headers=Authorization
+    #--default-ulimit，docker daemon的启动参数，能够指定默认container ulimit配置。如果此参数没配置，则默认从docker daemon继承；
+    # --ulimit，docker run的参数，能够覆盖docker daemon指定的ulimit默认值。如果此参数没配置，则默认从default-ulimit继承；
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+    volumes:
+      - esdata1:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
+    labels:
+      aliyun.probe.url: tcp://container:9200
+      aliyun.probe.initial_delay_seconds: "5"
+      aliyun.routing.port_9200: elastic
+      
+
+kibana:
+    image: docker.elastic.co/kibana/kibana:5.0.2
+    ports:
+      - 5601:5601
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch1:9200
+    labels:
+      aliyun.probe.url: tcp://container:5601
+      aliyun.probe.initial_delay_seconds: "5"
+      aliyun.routing.port_5601: kibana;https://es.class100.com
+
+elasticsearch-head:
+    image: mobz/elasticsearch-head:5
+    ports:
+      - 9100:9100
+    labels:
+      aliyun.probe.url: tcp://container:9100
+      aliyun.probe.initial_delay_seconds: "5"
+      aliyun.routing.port_9100: es-head;https://es-head.class100.com
